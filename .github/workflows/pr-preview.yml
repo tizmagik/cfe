@@ -1,0 +1,81 @@
+name: PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+
+# Finish a deployment before processing close, so cleanup cannot race deployment.
+concurrency:
+  group: cloudflare-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    environment:
+      name: preview-pr-${{ github.event.pull_request.number }}
+      url: https://pr-${{ github.event.pull_request.number }}.christforeveryone.org
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      DEPLOYMENT_SHA: ${{ github.event.pull_request.head.sha }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: node scripts/preview-config.mjs
+      - name: Deploy preview
+        run: npx wrangler deploy --config wrangler.preview.json --var "DEPLOYMENT_SHA:${DEPLOYMENT_SHA}"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Verify preview hostname and commit
+        run: node scripts/check-deployment.mjs "https://pr-${PR_NUMBER}.christforeveryone.org" "$DEPLOYMENT_SHA"
+      - name: Post preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.payload.pull_request.number;
+            const marker = '<!-- cfe-cloudflare-preview -->';
+            const body = `${marker}\n### Preview environment\n\nhttps://pr-${issue_number}.christforeveryone.org\n\nVerified commit \`${context.payload.pull_request.head.sha}\`. This preview is removed when the PR closes.`;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number,
+            });
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...context.repo, issue_number, body });
+            }
+
+  teardown:
+    if: github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Delete preview Worker and domain
+        run: node scripts/delete-preview.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

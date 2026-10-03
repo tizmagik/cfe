@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars*
+.env*
+wrangler.preview.json
+.DS_Store
