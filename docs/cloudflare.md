@@ -60,10 +60,12 @@ PR_NUMBER=123 node scripts/delete-preview.mjs
 
 ## Production migration
 
-The current GitHub Pages site remains available until the initial production
-Worker takes over the apex and `www` DNS records. Preserve MX/TXT records and
-unrelated subdomains. After production HTTPS is verified, disable GitHub Pages
-in repository settings to avoid duplicate publishing. The old `CNAME` file is
-retained as a reference and is excluded from the Worker assets.
+Production was migrated from GitHub Pages to Cloudflare on October 3, 2026.
+The four GitHub Pages apex A records and `www` CNAME were replaced by Cloudflare
+Worker custom-domain records. Existing MX/TXT records and unrelated subdomains
+were preserved. GitHub Pages publishing is disabled; the old `CNAME` file remains
+as a reference and is excluded from Worker assets.
 
+The scoped token and account variable are configured in GitHub. Automated preview
+deployment, cleanup on close, and recreation on reopen have been verified.
 Production automation starts once these workflows merge to `main`.
