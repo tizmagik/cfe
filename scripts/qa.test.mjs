@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { searchQA } from '../qa.js';
-import { validateEntries, selectResources, importEntries } from './qa-import.mjs';
+import { EMBEDDING_PROFILE, validateEntries, selectResources, importEntries } from './qa-import.mjs';
 import { previewConfig } from './preview-config.mjs';
 
 const config = JSON.parse(readFileSync('wrangler.jsonc', 'utf8'));
@@ -107,4 +107,32 @@ test('failed vector mutation never publishes the new D1 record', async () => {
     throw new Error('mutation failed');
   }), /mutation failed/);
   assert.ok(!calls.some(p => p.includes('/d1/')));
+});
+
+test('offline vectors are imported unchanged without calling Workers AI', async () => {
+  const input = { embeddingProfile: EMBEDDING_PROFILE, entries: example.map(e => ({ ...e, vector })) };
+  const entries = validateEntries(input);
+  const upserts = [];
+  await importEntries(entries, selectResources(config, 'preview'), async (path, body) => {
+    assert.ok(!path.includes('/ai/run/'), 'Precomputed import must not incur embedding inference');
+    if (path.endsWith('/upsert')) upserts.push(...body.trim().split('\n').map(JSON.parse));
+    return path.endsWith('/query') ? [{ success: true }] : { mutationId: 'offline' };
+  });
+  assert.deepEqual(upserts.map(v => v.values), [vector, vector]);
+  const changed = structuredClone(input);
+  changed.entries[0].vector[0] += 0.1;
+  assert.notEqual(validateEntries(changed)[0].revision, entries[0].revision);
+});
+
+test('offline imports reject incompatible models, invalid vectors and ambiguous legacy input', () => {
+  const envelope = (v = vector) => ({ embeddingProfile: EMBEDDING_PROFILE, entries: [{ ...example[0], vector: v }] });
+  for (const invalid of [Array(383).fill(0.1), Array(384).fill(0), [...vector.slice(1), Infinity], [...vector.slice(1), '0.1'], undefined]) {
+    assert.throws(() => validateEntries(envelope(invalid === undefined ? null : invalid)));
+  }
+  for (const profile of [undefined, { ...EMBEDDING_PROFILE, model: 'another-model' }, { ...EMBEDDING_PROFILE, pooling: 'cls' }, { ...EMBEDDING_PROFILE, dimensions: 768 }]) {
+    assert.throws(() => validateEntries({ ...envelope(), embeddingProfile: profile }), /must match/);
+  }
+  assert.throws(() => validateEntries([{ ...example[0], vector }]), /refusing to silently regenerate/);
+  const draft = validateEntries({ embeddingProfile: EMBEDDING_PROFILE, entries: [{ ...example[0], published: false }] });
+  assert.equal(draft[0].vector, undefined);
 });

@@ -2,9 +2,22 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { EMBEDDING_MODEL, EMBEDDING_POOLING, MAX_SEARCH_LENGTH, normalizeQuery, assertEmbedding } from '../qa.js';
+import { EMBEDDING_MODEL, EMBEDDING_DIMENSIONS, EMBEDDING_POOLING, MAX_SEARCH_LENGTH, normalizeQuery, assertEmbedding } from '../qa.js';
+
+export const EMBEDDING_PROFILE = {
+  model: EMBEDDING_MODEL, dimensions: EMBEDDING_DIMENSIONS,
+  pooling: EMBEDDING_POOLING, metric: 'cosine',
+};
 
 export function validateEntries(input) {
+  const precomputed = !Array.isArray(input);
+  if (precomputed) {
+    const profile = input?.embeddingProfile;
+    if (!profile || Object.entries(EMBEDDING_PROFILE).some(([key, value]) => profile[key] !== value)) {
+      throw new Error(`Offline embeddingProfile must match the query model/index: ${JSON.stringify(EMBEDDING_PROFILE)}. A different model requires configuring compatible query embeddings and an index before importing.`);
+    }
+    input = input.entries;
+  }
   if (!Array.isArray(input) || input.length < 1 || input.length > 1000) throw new Error('Supply a JSON array of 1–1000 entries.');
   const ids = new Set();
   return input.map(entry => {
@@ -20,7 +33,16 @@ export function validateEntries(input) {
     if (text.length > MAX_SEARCH_LENGTH) throw new Error(`Question and aliases combined exceed 500 characters for ${entry.id}.`);
     const source = entry.source ?? null;
     if (source !== null && (typeof source !== 'string' || source.length > 1000 || !/^https?:\/\//.test(source))) throw new Error(`Source must be an http(s) URL for ${entry.id}.`);
-    const record = { id: entry.id, question, answer, source, published: entry.published, text };
+    let vector;
+    if (precomputed) {
+      if (entry.published || entry.vector !== undefined) {
+        vector = assertEmbedding(entry.vector);
+        if (!vector.some(value => value !== 0)) throw new Error(`Zero vector cannot be used for cosine search: ${entry.id}.`);
+      }
+    } else if (entry.vector !== undefined) {
+      throw new Error('Precomputed vectors require an embeddingProfile envelope; refusing to silently regenerate them.');
+    }
+    const record = { id: entry.id, question, answer, source, published: entry.published, text, ...(vector ? { vector } : {}) };
     const revision = createHash('sha256').update(JSON.stringify({ ...record, model: EMBEDDING_MODEL, pooling: EMBEDDING_POOLING })).digest('hex');
     return { ...record, revision };
   });
@@ -44,9 +66,15 @@ export async function importEntries(entries, resources, api) {
     const batch = entries.slice(offset, offset + 10);
     const published = batch.filter(e => e.published);
     if (published.length) {
-      const embedding = await api(`${prefix}/ai/run/${EMBEDDING_MODEL}`, { text: published.map(e => e.text), pooling: EMBEDDING_POOLING });
-      if (embedding.data?.length !== published.length) throw new Error('Unexpected embedding batch size.');
-      const vectors = published.map((e, i) => ({ id: e.id, values: assertEmbedding(embedding.data[i]), metadata: { revision: e.revision } }));
+      const missing = published.filter(e => !e.vector);
+      let generated = [];
+      if (missing.length) {
+        const embedding = await api(`${prefix}/ai/run/${EMBEDDING_MODEL}`, { text: missing.map(e => e.text), pooling: EMBEDDING_POOLING });
+        if (embedding.data?.length !== missing.length) throw new Error('Unexpected embedding batch size.');
+        generated = embedding.data.map(assertEmbedding);
+      }
+      let cursor = 0;
+      const vectors = published.map(e => ({ id: e.id, values: e.vector ?? generated[cursor++], metadata: { revision: e.revision } }));
       const mutation = await api(`${index}/upsert`, vectors.map(v => JSON.stringify(v)).join('\n') + '\n', 'application/x-ndjson');
       mutations.push(mutation.mutationId);
     }

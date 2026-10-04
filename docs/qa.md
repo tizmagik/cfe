@@ -66,6 +66,60 @@ revision with the D1 revision, hiding mismatches during partial imports or updat
 There is no public data-write/admin endpoint. Imports run through Cloudflare's
 authenticated APIs.
 
+## Import embeddings generated offline
+
+The same command accepts a precomputed export. Wrap the entries in an object with
+`embeddingProfile`, and add a `vector` array to each published entry. The importer
+uploads those vectors unchanged and skips Workers AI embedding generation entirely.
+It still stores the full answers in D1 and manages publication and revision checks.
+
+The following example is **abbreviated**: replace the three sample numbers with
+the complete 384-element vector from the offline export before importing.
+
+```json
+{
+  "embeddingProfile": {
+    "model": "@cf/baai/bge-small-en-v1.5",
+    "dimensions": 384,
+    "pooling": "mean",
+    "metric": "cosine"
+  },
+  "entries": [
+    {
+      "id": "stable-question-id",
+      "question": "A question in English?",
+      "answer": "The complete reviewed answer.",
+      "published": true,
+      "vector": [0.12, -0.04, 0.08]
+    }
+  ]
+}
+```
+
+```sh
+npm run qa:import -- /path/to/qa-with-vectors.json --target preview
+npm run qa:import -- /path/to/qa-with-vectors.json --target production
+```
+
+Each vector must have exactly 384 finite numeric values and be nonzero. Drafts
+(`published: false`) can omit the vector. Validation runs before any remote writes.
+Changing a vector also changes the revision used to keep search results consistent.
+Offline-only imports require Vectorize Write and D1 Edit; Workers AI access is
+unnecessary for importing them (the deployed search Worker still embeds queries).
+
+**Confirm the actual offline model before importing.** The profile is a declaration
+of how the vectors were generated, not a conversion instruction. Matching dimension
+counts alone does not establish compatibility. Current search uses Cloudflare's
+`@cf/baai/bge-small-en-v1.5` with `mean` pooling; offline exports must use compatible
+weights, pooling and preprocessing. Do not relabel embeddings from another model to
+pass validation. If the colleague used another model or pooling mode, configure
+matching query-time inference and, when dimensions differ, provision a matching
+index first. The importer rejects incompatible profiles rather than mixing spaces.
+
+Plain JSON arrays remain supported for generating new embeddings. Supplying
+`vector` in that legacy format is rejected so existing offline work cannot be
+silently ignored and regenerated.
+
 ## Search API
 
 ```text
