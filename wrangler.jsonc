@@ -28,6 +28,74 @@
     }
   },
   "vars": {
-    "DEPLOYMENT_SHA": "local"
+    "DEPLOYMENT_SHA": "local",
+    "QA_ENVIRONMENT": "production",
+    "QA_MIN_SCORE": "0.65"
+  },
+  "account_id": "91511fba40bf3d2e840c3f4e74f49165",
+  "d1_databases": [
+    {
+      "binding": "QA_DB",
+      "database_name": "cfe-qa",
+      "database_id": "242a7f84-ecd1-431c-b180-bad8b53bd6f4",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vectorize": [
+    {
+      "binding": "QA_INDEX",
+      "index_name": "cfe-qa"
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  },
+  "ratelimits": [
+    {
+      "name": "QA_SEARCH_LIMITER",
+      "namespace_id": "104001",
+      "simple": {
+        "limit": 20,
+        "period": 60
+      }
+    }
+  ],
+  "env": {
+    "preview": {
+      "d1_databases": [
+        {
+          "binding": "QA_DB",
+          "database_name": "cfe-qa-preview",
+          "database_id": "0ea3c2dd-e52e-46f2-92be-57b11dbc8e02",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "vectorize": [
+        {
+          "binding": "QA_INDEX",
+          "index_name": "cfe-qa-preview"
+        }
+      ],
+      "ai": {
+        "binding": "AI"
+      },
+      "ratelimits": [
+        {
+          "name": "QA_SEARCH_LIMITER",
+          "namespace_id": "104002",
+          "simple": {
+            "limit": 20,
+            "period": 60
+          }
+        }
+      ],
+      "vars": {
+        "DEPLOYMENT_SHA": "local",
+        "QA_ENVIRONMENT": "preview",
+        "QA_MIN_SCORE": "0.65"
+      },
+      "routes": [],
+      "workers_dev": false
+    }
   }
 }

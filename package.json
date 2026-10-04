@@ -5,8 +5,9 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "npm run build && wrangler dev --local-upstream localhost",
-    "deploy": "npm run build && wrangler deploy",
-    "test": "node --test scripts/*.test.mjs"
+    "deploy": "npm run build && wrangler deploy --env=''",
+    "test": "node --test scripts/*.test.mjs",
+    "qa:import": "node scripts/qa-import.mjs"
   },
   "devDependencies": {
     "wrangler": "4.147.0"
