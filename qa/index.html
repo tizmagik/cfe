@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f0df">
+  <meta name="description" content="Explore questions and answers about the Coptic Orthodox faith. Search questions, answers and topics, or browse the original topic branches.">
+  <title>Questions &amp; Answers — Christ for Everyone</title>
+  <link rel="stylesheet" href="/qa/qa.css">
+  <script src="/qa/qa-client.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#search-query">Skip to search</a>
+  <div class="page">
+    <header class="site-header">
+      <a class="home-link" href="/" aria-label="Christ for Everyone homepage">Christ <em>for</em> Everyone</a>
+      <p class="church">Virgin Mary &amp; St. Pachomius<span>Coptic Orthodox Church</span></p>
+    </header>
+
+    <main>
+      <section class="introduction" aria-labelledby="page-title">
+        <h1 id="page-title">Questions <em>&amp;</em> Answers</h1>
+        <div class="divider" aria-hidden="true">
+          <svg class="cross" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M20 1 26 8 23 12 23 20 29 20 33 16 39 23 33 30 29 26 23 26 23 38 27 42 20 49 13 42 17 38 17 26 11 26 7 30 1 23 7 16 11 20 17 20 17 12 14 8Z"/></svg>
+        </div>
+        <p class="intro">Ask a question. Follow a topic.<br>Discover more about the Coptic Orthodox faith.</p>
+      </section>
+
+      <form id="search-form" class="search-form" role="search">
+        <label for="search-query">Search questions, answers &amp; topics</label>
+        <div class="search-controls">
+          <div class="search-input-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg>
+            <input id="search-query" name="q" type="search" placeholder="For example, infant baptism" autocomplete="off" maxlength="2000" aria-describedby="search-help">
+          </div>
+          <button id="search-submit" class="primary-button" type="submit">Search</button>
+        </div>
+        <p id="search-help" class="search-help">Full phrase matches appear first, followed by matches for the main words in your search.</p>
+      </form>
+
+      <div class="library-layout">
+        <aside class="topic-sidebar" aria-labelledby="topics-heading">
+          <button id="mobile-topic-toggle" class="mobile-topic-toggle" type="button" aria-expanded="false" aria-controls="topic-controls">
+            <span>Browse topics</span><span id="mobile-topic-name">All topics</span><svg class="toggle-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 5 5 5-5"/></svg>
+          </button>
+          <div id="topic-controls" class="topic-controls">
+            <div class="topics-heading-row"><h2 id="topics-heading">Browse topics</h2><span id="topic-total" class="quiet-count"></span></div>
+            <label class="topic-filter-label" for="topic-filter">Find a topic</label>
+            <div class="topic-filter-wrap">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg>
+              <input id="topic-filter" type="search" placeholder="Filter topic names…" autocomplete="off" maxlength="150" aria-describedby="topic-help">
+            </div>
+            <button id="all-topics" class="all-topics selected" type="button" aria-pressed="true"><span>All topics</span><span id="all-question-count" class="topic-count"></span></button>
+            <div class="topic-tree-heading">
+              <p id="topic-tree-label">Original topic branches</p>
+              <label class="letter-label" for="topic-letter"><span class="sr-only">Jump to letter</span><select id="topic-letter" aria-label="Jump to letter"><option value="all">A–Z</option></select></label>
+            </div>
+            <nav id="topic-tree" class="topic-tree" aria-label="Question topics" aria-busy="true"><p class="quiet-message">Loading topics…</p></nav>
+            <p id="topic-filter-status" class="sr-only" aria-live="polite"></p>
+            <p id="topic-help" class="topic-help">Open a branch to see its subtopics. Question counts include each topic’s subtopics.</p>
+          </div>
+        </aside>
+
+        <section class="answers-section" aria-labelledby="answers-heading">
+          <nav id="breadcrumbs" class="breadcrumbs" aria-label="Current topic"></nav>
+          <div class="results-heading">
+            <div><h2 id="answers-heading">Questions &amp; answers</h2><p id="scope-description" class="scope-description">Browse the collection or search above.</p></div>
+            <label class="result-limit-label" for="result-limit"><span class="sr-only">Questions per page</span><select id="result-limit" aria-label="Questions per page"><option value="10">10 per page</option><option value="20">20 per page</option><option value="30">30 per page</option></select></label>
+          </div>
+          <div class="result-summary-row"><p id="result-summary" class="result-summary" role="status" aria-live="polite">Loading questions…</p><button id="clear-search" class="text-button" type="button" hidden>Clear search</button></div>
+          <p id="result-error" class="result-error" role="alert" hidden></p>
+          <div id="results" class="results" aria-busy="true"></div>
+          <nav id="pagination" class="pagination" aria-label="Question pages" hidden>
+            <button id="previous-page" class="page-button" type="button"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 10H4m5-5-5 5 5 5"/></svg><span>Previous</span></button><span id="page-summary" class="page-summary"></span><button id="next-page" class="page-button" type="button"><span>Next</span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5"/></svg></button>
+          </nav>
+        </section>
+      </div>
+      <noscript><p class="noscript-message">Please enable JavaScript to search and browse this collection. You can also visit the <a href="https://qa.suscopts.org/">original questions and answers</a>.</p></noscript>
+    </main>
+
+    <footer class="site-footer">
+      <p>Questions &amp; answers from the <a href="https://qa.suscopts.org/" target="_blank" rel="noopener noreferrer">Coptic Orthodox Diocese of the Southern United States</a>.</p>
+      <p>Reproduced with permission. Each answer links to its original source.</p>
+      <a class="footer-home" href="/">Christ for Everyone</a>
+    </footer>
+  </div>
+</body>
+</html>

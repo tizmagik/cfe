@@ -1,4 +1,5 @@
 import { searchQA } from './qa.js';
+import { lexicalQA, topicsQA } from './qa-lexical.js';
 
 export default {
   async fetch(request, env) {
@@ -14,11 +15,21 @@ export default {
       url.hostname = "www.christforeveryone.org";
       return Response.redirect(url.toString(), 301);
     }
-    const response = url.pathname === '/api/qa/search'
+    let response;
+    if (url.pathname === '/qa') {
+      url.pathname = '/qa/';
+      response = Response.redirect(url.toString(), 308);
+    } else {
+      response = url.pathname === '/api/qa/lexical'
+      ? await lexicalQA(request, env)
+      : url.pathname === '/api/qa/topics'
+        ? await topicsQA(request, env)
+      : url.pathname === '/api/qa/search'
       ? await searchQA(request, env)
       : url.pathname.startsWith('/api/')
         ? Response.json({ error: 'Not found' }, { status: 404 })
         : await env.ASSETS.fetch(request);
+    }
     if (/^pr-[1-9]\d*\.christforeveryone\.org$/.test(url.hostname)) {
       const preview = new Response(response.body, response);
       preview.headers.set("X-Robots-Tag", "noindex, nofollow");
