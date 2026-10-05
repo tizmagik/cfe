@@ -9,7 +9,16 @@ export const EMBEDDING_PROFILE = {
   pooling: EMBEDDING_POOLING, metric: 'cosine',
 };
 
-export function validateEntries(input) {
+export function validateEntries(input, { regenerate = false } = {}) {
+  // Explicitly discard old embeddings when changing models; never mix spaces.
+  if (regenerate) {
+    const entries = Array.isArray(input) ? input : input?.entries;
+    if (!Array.isArray(entries)) throw new Error('Supply an array or an export with entries to regenerate.');
+    input = entries.map(entry => {
+      const { vector, ...record } = entry ?? {};
+      return record;
+    });
+  }
   const precomputed = !Array.isArray(input);
   if (precomputed) {
     const profile = input?.embeddingProfile;
@@ -101,8 +110,9 @@ export async function importEntries(entries, resources, api) {
 async function main() {
   const args = process.argv.slice(2);
   const target = args[args.indexOf('--target') + 1];
-  if (args.length !== 3 || args[1] !== '--target') throw new Error('Usage: npm run qa:import -- path/to/qa.json --target preview|production');
-  const entries = validateEntries(JSON.parse(readFileSync(args[0], 'utf8')));
+  const regenerate = args[3] === '--regenerate';
+  if ((args.length !== 3 && !(args.length === 4 && regenerate)) || args[1] !== '--target') throw new Error('Usage: npm run qa:import -- path/to/qa.json --target preview|production [--regenerate]');
+  const entries = validateEntries(JSON.parse(readFileSync(args[0], 'utf8')), { regenerate });
   const resources = selectResources(JSON.parse(readFileSync('wrangler.jsonc', 'utf8')), target);
   // Capture credentials in memory only. Never print them or pass them as CLI arguments.
   let token = process.env.CLOUDFLARE_API_TOKEN;

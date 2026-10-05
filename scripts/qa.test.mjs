@@ -136,3 +136,25 @@ test('offline imports reject incompatible models, invalid vectors and ambiguous 
   const draft = validateEntries({ embeddingProfile: EMBEDDING_PROFILE, entries: [{ ...example[0], published: false }] });
   assert.equal(draft[0].vector, undefined);
 });
+
+test('explicit regeneration discards OpenAI vectors and embeds text with the Cloudflare model', async () => {
+  const exportData = {
+    embeddingProfile: { model: 'text-embedding-3-large', dimensions: 1536 },
+    entries: [{ ...example[0], vector: Array(1536).fill(0.2) }],
+  };
+  assert.throws(() => validateEntries(exportData), /must match/);
+  const entries = validateEntries(exportData, { regenerate: true });
+  assert.equal(entries[0].vector, undefined);
+  let aiCalls = 0;
+  await importEntries(entries, selectResources(config, 'preview'), async (path, body) => {
+    if (path.includes('/ai/run/')) {
+      aiCalls++;
+      assert.ok(path.endsWith('@cf/baai/bge-small-en-v1.5'));
+      assert.equal(body.pooling, 'mean');
+      return { data: [vector] };
+    }
+    if (path.endsWith('/upsert')) assert.deepEqual(JSON.parse(body).values, vector);
+    return path.endsWith('/query') ? [{ success: true }] : { mutationId: 'regenerated' };
+  });
+  assert.equal(aiCalls, 1);
+});

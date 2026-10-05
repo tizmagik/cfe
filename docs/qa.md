@@ -68,6 +68,31 @@ authenticated APIs.
 
 ## Import embeddings generated offline
 
+### Regenerate OpenAI embeddings with Cloudflare
+
+For an export generated with `text-embedding-3-large`, use `--regenerate` to
+explicitly discard the supplied vectors and create new 384-dimension BGE vectors
+from each question and its aliases. This accepts either a plain entry array or
+the export envelope below. Full answer text remains in D1.
+
+```sh
+npm run qa:import -- /path/to/openai-export.json --target preview --regenerate
+npm run qa:import -- /path/to/openai-export.json --target production --regenerate
+```
+
+This requires Cloudflare Workers AI Read in addition to D1 Edit and Vectorize
+Edit/Write, or an authorized local `wrangler login` session. The colleague's
+`CFE Q&A Offline Imports` token currently has D1 and Vectorize access only: it can
+import compatible precomputed vectors, but cannot call Workers AI to regenerate
+them. An authorized account operator can run the regeneration command.
+
+The deployed search Worker uses its AI binding and needs no OpenAI API key.
+The active indexes remain `cfe-qa` and `cfe-qa-preview` at 384 dimensions. Empty
+`cfe-qa-1536` and `cfe-qa-preview-1536` indexes were provisioned while evaluating
+reuse of the OpenAI vectors; they are unused and incur no vector storage usage.
+
+### Preserve compatible offline embeddings
+
 The same command accepts a precomputed export. Wrap the entries in an object with
 `embeddingProfile`, and add a `vector` array to each published entry. The importer
 uploads those vectors unchanged and skips Workers AI embedding generation entirely.
