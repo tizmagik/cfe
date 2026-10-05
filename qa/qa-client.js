@@ -7,7 +7,6 @@ const state = {
 const collator = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
 const alphabetical = (a, b) => collator.compare(a.name, b.name) || a.id - b.id;
 const chevronSvg = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg>';
-const externalSvg = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2h5v5m0-5L7 9M7 3H2v11h11V9"/></svg>';
 const answerArrowSvg = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5"/></svg>';
 const folded = (text) => String(text).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('en');
 const letterOf = (topic) => {
@@ -274,17 +273,11 @@ function renderResults(results) {
       });
       actions.append(expand);
     }
-    const original = sourceLink(result.source_url, '', 'original-link');
-    if (original) {
-      const icon = element('span');
-      icon.innerHTML = externalSvg;
-      original.append(icon, element('span', '', 'View original'));
-      actions.append(original);
-    }
     const publisher = result.publisher || result.citation?.publisher || 'Coptic Orthodox Diocese of the Southern United States';
     const citation = element('p', 'citation');
     citation.append(document.createTextNode('Source: '), sourceLink(result.source_url, publisher) || document.createTextNode(publisher), document.createTextNode(` · Q&A #${result.qa_id}`));
-    row.append(actions, citation);
+    if (actions.childElementCount) row.append(actions);
+    row.append(citation);
     fragment.append(row);
   }
   $('results').replaceChildren(fragment);

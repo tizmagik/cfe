@@ -104,9 +104,6 @@ h2 { margin: 0; font-weight: 400; letter-spacing: -.025em; }
 .answer-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 21px; margin: 15px 0 0; }
 .answer-actions button { padding: 0; border: 0; background: transparent; color: var(--burgundy); font-size: 13px; line-height: 1.8; }
 .answer-actions button:hover { text-decoration: underline; text-underline-offset: 3px; }
-.original-link { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; line-height: 1.8; text-decoration: none; }
-.original-link:hover { text-decoration: underline; }
-.original-link svg { width: 12px; height: 12px; }
 .citation { margin: 13px 0 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
 .citation a { color: inherit; }
 .pagination { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 23px; }
@@ -178,7 +175,7 @@ h2 { margin: 0; font-weight: 400; letter-spacing: -.025em; }
   .answer-row h3 { font-size: 21px; }
   .answer-text { font-size: 15px; line-height: 1.8; }
   .answer-actions { gap: 18px; margin-top: 11px; }
-  .answer-actions button, .original-link { min-height: 35px; display: inline-flex; align-items: center; }
+  .answer-actions button { min-height: 35px; display: inline-flex; align-items: center; }
   .answer-topic-link { min-height: 25px; }
   .pagination { gap: 9px; }
   .page-button { padding: 10px; font-size: 12px; min-height: 42px; }
