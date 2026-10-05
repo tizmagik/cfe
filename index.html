@@ -139,6 +139,17 @@
       font-size: 15px;
       font-style: italic;
     }
+    .qa-link {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 10px 18px;
+      border: 1px solid var(--gold);
+      color: var(--burgundy);
+      font-size: 17px;
+      text-underline-offset: 4px;
+    }
+    .qa-link:hover { background: #a47c3210; }
+    .qa-link:focus-visible { outline: 2px solid var(--burgundy); outline-offset: 4px; }
     footer { width: 100%; }
     .address {
       margin: 0;
@@ -191,6 +202,7 @@
     <footer>
       <address class="address">3 Swim Club Road, Stony Point, NY 10980</address>
       <p class="coming-soon">Website coming soon</p>
+      <a class="qa-link" href="/qa/">Explore questions &amp; answers</a>
     </footer>
   </div>
 </body>

@@ -7,7 +7,8 @@
     "dev": "npm run build && wrangler dev --local-upstream localhost",
     "deploy": "npm run build && wrangler deploy --env=''",
     "test": "node --test scripts/*.test.mjs",
-    "qa:import": "node scripts/qa-import.mjs"
+    "qa:import": "node scripts/qa-import.mjs",
+    "suscopts:import": "node scripts/suscopts-import.mjs"
   },
   "devDependencies": {
     "wrangler": "4.147.0"

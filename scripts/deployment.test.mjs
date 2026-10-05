@@ -1,6 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { previewConfig } from './preview-config.mjs';
 import { deletePreview } from './delete-preview.mjs';
 import worker from '../worker.js';
@@ -75,4 +79,30 @@ test('production redirects preserve path and query; previews serve assets direct
   assert.equal(preview.headers.get('X-Robots-Tag'), 'noindex, nofollow');
   const production = await worker.fetch(new Request('https://www.christforeveryone.org/'), env);
   assert.equal(production.headers.get('X-Robots-Tag'), null);
+});
+
+test('Q&A navigation preserves bookmarks and preview noindex headers', async () => {
+  const response = await worker.fetch(new Request('https://pr-4.christforeveryone.org/qa?topic=809&q=oil'), {});
+  assert.equal(response.status, 308);
+  assert.equal(response.headers.get('Location'), 'https://pr-4.christforeveryone.org/qa/?topic=809&q=oil');
+  assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow');
+  const unknown = await worker.fetch(new Request('https://pr-4.christforeveryone.org/api/private'), {});
+  assert.equal(unknown.status, 404);
+});
+
+test('site build publishes only homepage and Q&A assets, excluding data and credentials', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'cfe-assets-'));
+  try {
+    await mkdir(join(directory, 'qa'));
+    await writeFile(join(directory, 'index.html'), '<title>Home</title>');
+    for (const file of ['index.html', 'qa.css', 'qa-client.js']) await writeFile(join(directory, 'qa', file), file);
+    await writeFile(join(directory, '.dev.vars'), 'PRIVATE_TEST_VALUE=never-publish');
+    await writeFile(join(directory, 'suscopts-source.json'), '{"private":"not-an-asset"}');
+    await writeFile(join(directory, 'qa', 'unexpected.json'), '{"private":"not-an-asset"}');
+    execFileSync(process.execPath, [new URL('./build.mjs', import.meta.url).pathname], { cwd: directory });
+    assert.deepEqual((await readdir(join(directory, 'dist'))).sort(), ['index.html', 'qa']);
+    assert.deepEqual((await readdir(join(directory, 'dist/qa'))).sort(), ['index.html', 'qa-client.js', 'qa.css']);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
