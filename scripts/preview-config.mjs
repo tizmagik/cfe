@@ -3,8 +3,13 @@ import { pathToFileURL } from "node:url";
 
 export function previewConfig(base, pr) {
   if (!/^[1-9]\d*$/.test(pr ?? "")) throw new Error("PR_NUMBER must be a positive integer");
+  if ((base.d1_databases || base.vectorize) && !base.env?.preview?.d1_databases?.length) {
+    throw new Error('Preview data bindings are required; refusing to inherit production resources');
+  }
   return {
     ...base,
+    ...base.env?.preview,
+    env: undefined,
     name: `cfe-pr-${pr}`,
     routes: [{ pattern: `pr-${pr}.christforeveryone.org`, custom_domain: true }],
   };

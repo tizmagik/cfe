@@ -1,0 +1,18 @@
+[
+  {
+    "id": "bible-study-welcome",
+    "question": "Can I attend Bible study if I have never read the Bible?",
+    "aliases": ["Do I need to know the Bible before coming?"],
+    "answer": "Everyone is welcome. No prior knowledge or belief is required. Come ask questions, explore the Bible, and discover who Christ is.",
+    "source": "https://www.christforeveryone.org/",
+    "published": true
+  },
+  {
+    "id": "bible-study-schedule",
+    "question": "When and where is the Bible study?",
+    "aliases": ["What time is the meeting?", "Where do we meet?"],
+    "answer": "Bible study meets every Sunday at 7:00 PM at Virgin Mary & St. Pachomius Coptic Orthodox Church, 3 Swim Club Road, Stony Point, NY 10980.",
+    "source": "https://www.christforeveryone.org/",
+    "published": true
+  }
+]

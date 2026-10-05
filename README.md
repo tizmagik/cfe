@@ -18,3 +18,9 @@ Opening, updating, or reopening an in-repository PR deploys `cfe-pr-N` at
 Worker and custom domain. Previews are public and send a `noindex` header.
 
 See [Cloudflare setup](docs/cloudflare.md) for credentials and local commands.
+
+## Q&A backend
+
+Cloudflare Vectorize, Workers AI embeddings, and D1 support curated English Q&A
+similarity search at `/api/qa/search`. See [Q&A setup and data handoff](docs/qa.md)
+for the JSON format, import command, API contract, preview isolation and costs.
